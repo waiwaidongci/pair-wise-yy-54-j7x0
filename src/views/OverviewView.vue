@@ -18,6 +18,7 @@ const stats = computed(() => [
   <section class="page-head"><div><p class="eyebrow">建设 · 交通 · 公交 · 应急</p><h1>封路方案协调总览</h1><p>在同一地图与阶段计划下核验相邻工程、生命通道、公交覆盖与绕行时延。</p></div><a-space><a-button>公开通告预览</a-button><a-button type="primary" @click="$router.push('/map')">编辑封路方案</a-button></a-space></section>
   <a-spin :loading="loading" style="width:100%">
     <a-alert v-if="error" type="error" title="GraphQL 请求异常，已使用本地草案" class="mb16" />
+    <a-alert v-if="!store.canExport" type="warning" class="mb16" title="存在未完成对账批次，公开通告导出已阻止" content="外部改期与撤回需经对账写入冲突结果后才反映到协调台；请在会签页完成断点恢复。" />
     <div class="metrics"><article v-for="item in stats" :key="item.label" class="card metric"><span>{{ item.label }}</span><strong>{{ item.value }}</strong><small>{{ item.note }}</small></article></div>
     <div class="grid-2">
       <article class="card">
@@ -27,7 +28,7 @@ const stats = computed(() => [
       </article>
       <article class="card">
         <div class="panel-head"><div><h2>规则检测结果</h2><p>按影响等级排序</p></div><a-tag color="red">{{ store.conflicts.filter((item) => item.level === '高').length }} 高风险</a-tag></div>
-        <div v-for="item in store.conflicts" :key="item.id" class="conflict" :class="item.level === '高' ? 'red' : 'amber'"><div><b>{{ item.title }}</b><small>{{ item.segmentId }}</small></div><a-tag :color="item.level === '高' ? 'red' : 'orange'">{{ item.level }}</a-tag><p>{{ item.detail }}</p><a-button size="mini" type="text" @click="store.selectedStageId = item.segmentId; $router.push('/map')">定位路段</a-button></div>
+        <div v-for="item in store.conflicts" :key="item.id" class="conflict" :class="item.level === '高' ? 'red' : 'amber'"><div><b>{{ item.title }}</b><small>{{ item.segmentId }}<template v-if="item.source"> · 占用来源：{{ item.source }}</template></small></div><a-tag :color="item.level === '高' ? 'red' : 'orange'">{{ item.level }}</a-tag><p>{{ item.detail }}</p><a-button size="mini" type="text" @click="store.selectedStageId = item.segmentId; $router.push('/map')">定位路段</a-button></div>
       </article>
     </div>
     <article class="card mt16"><div class="panel-head"><div><h2>会签单位与条件</h2><p>意见锚定具体分段，原记录不覆盖</p></div><a-button type="text" @click="$router.push('/review')">进入会签</a-button></div><div class="agency-grid"><div v-for="agency in result?.agencies || []" :key="agency.id" class="agency"><span>{{ agency.role }}</span><div><b>{{ agency.name }}</b><small>{{ agency.role === '公交' ? '1 条待处理' : agency.role === '应急' ? '条件已接受' : '暂无新增意见' }}</small></div><a-tag :color="agency.role === '公交' ? 'orange' : 'green'">{{ agency.role === '公交' ? '待处理' : '已响应' }}</a-tag></div></div></article>
